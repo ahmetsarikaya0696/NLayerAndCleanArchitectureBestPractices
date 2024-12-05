@@ -1,27 +1,18 @@
-using API.ExceptionHandlers;
-using API.Filters;
+using API.Extensions;
 using Application.Extensions;
 using Persistence.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddControllersWithFiltersExtension();
+builder.Services.AddSwaggerExtension();
 
-builder.Services.AddControllers(options =>
-{
-    options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
-    options.Filters.Add<FluentValidationFilter>();
-});
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddExceptionHandler<CriticalExceptionHandler>();
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddExceptionHandlerExtension();
 
 builder.Services.AddRepositories(builder.Configuration);
 builder.Services.AddServices();
+
+builder.Services.AddCachingExtension();
 
 var app = builder.Build();
 
@@ -30,8 +21,7 @@ app.UseExceptionHandler(x => { });
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerExtension();
 }
 
 app.UseHttpsRedirection();

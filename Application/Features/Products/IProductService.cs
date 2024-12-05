@@ -9,7 +9,7 @@ namespace Application.Features.Products
     {
         Task<ServiceResult<List<ProductDto>>> GetTopPriceProductsAsync(int count);
         Task<ServiceResult<List<ProductDto>>> GetAllWithCategoryAsync();
-        ServiceResult<List<ProductDto>> GetPaginated(int pageNumber, int pageSize);
+        Task<ServiceResult<List<ProductDto>>> GetPaginatedAsync(int pageNumber, int pageSize);
         Task<ServiceResult<ProductDto?>> GetByIdWithCategoryAsync(int id);
         Task<ServiceResult<CreateProductResponse>> CreateAsync(CreateProductRequest createProductRequest);
         Task<ServiceResult> UpdateAsync(UpdateProductRequest updateProductRequest);

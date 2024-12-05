@@ -16,9 +16,9 @@ namespace API.Controllers
         }
 
         [HttpGet("{pageNumber:int}/{pageSize:int}")]
-        public IActionResult GetAll(int pageNumber, int pageSize)
+        public async Task<IActionResult> GetPaginatedAsync(int pageNumber, int pageSize)
         {
-            var serviceResult = productService.GetPaginated(pageNumber, pageSize);
+            var serviceResult = await productService.GetPaginatedAsync(pageNumber, pageSize);
             return CreateActionResult(serviceResult);
         }
 

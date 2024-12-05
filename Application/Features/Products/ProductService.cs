@@ -1,16 +1,20 @@
-﻿using Application.Contracts.Persistence;
+﻿using Application.Contracts.Caching;
+using Application.Contracts.Persistence;
 using Application.Features.Products.Create;
 using Application.Features.Products.Dto;
 using Application.Features.Products.Update;
 using Application.Features.Products.UpdateStock;
 using AutoMapper;
 using Domain.Entities;
+using Microsoft.Extensions.Caching.Memory;
 using System.Net;
 
 namespace Application.Features.Products
 {
-    public class ProductService(IProductRepository productRepository, IUnitOfWork unitOfWork, IMapper mapper, ICategoryRepository categoryRepository) : IProductService
+    public class ProductService(IProductRepository productRepository, IUnitOfWork unitOfWork, IMapper mapper, ICategoryRepository categoryRepository, ICacheService cacheService) : IProductService
     {
+        private const string ProductListCacheKey = "ProductListCacheKey";
+
         public async Task<ServiceResult<List<ProductDto>>> GetTopPriceProductsAsync(int count)
         {
             var products = await productRepository.GetTopPriceProductsAsync(count);
@@ -32,15 +36,28 @@ namespace Application.Features.Products
             return ServiceResult<List<ProductDto>>.Success(productsAsDto);
         }
 
-        public ServiceResult<List<ProductDto>> GetPaginated(int pageNumber, int pageSize)
+        public async Task<ServiceResult<List<ProductDto>>> GetPaginatedAsync(int pageNumber, int pageSize)
         {
+            List<ProductDto>? allProducts;
+
+            // Önbellekte tüm veriyi kontrol et
+            allProducts = await cacheService.GetAsync<List<ProductDto>>(ProductListCacheKey);
+
+            if (allProducts is null)
+            {
+                // Tüm veriyi veritabanından çek
+                var products = productRepository.GetAll().ToList();
+                allProducts = mapper.Map<List<ProductDto>>(products);
+
+                // Önbelleğe ekle
+                await cacheService.AddAsync(ProductListCacheKey, allProducts, TimeSpan.FromMinutes(30));
+            }
+
+            // Sayfalama yap
             int skip = (pageNumber - 1) * pageSize;
+            var paginatedProducts = allProducts.Skip(skip).Take(pageSize).ToList();
 
-            var products = productRepository.GetAll().Skip(skip).Take(pageSize).ToList();
-
-            var productsAsDto = mapper.Map<List<ProductDto>>(products);
-
-            return ServiceResult<List<ProductDto>>.Success(productsAsDto);
+            return ServiceResult<List<ProductDto>>.Success(paginatedProducts);
         }
 
         public async Task<ServiceResult<ProductDto?>> GetByIdWithCategoryAsync(int id)
