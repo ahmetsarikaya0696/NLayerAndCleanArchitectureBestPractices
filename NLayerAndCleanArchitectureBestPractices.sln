@@ -35,6 +35,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Caching", "Caching\Caching.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bus", "Bus\Bus.csproj", "{4CF62BB7-5766-406B-8ED6-904D7DABD7A2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		readme.md = readme.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,5 +101,8 @@ Global
 		{1C532349-B821-4EA8-9235-C84FBFFC160E} = {F3B78B30-7392-442A-A616-6EB203E4082D}
 		{6CCEBEA8-B874-46E0-B5D8-508ECD15E392} = {01BFB4BD-F61B-4D2F-BC8D-85466B8CF93D}
 		{4CF62BB7-5766-406B-8ED6-904D7DABD7A2} = {01BFB4BD-F61B-4D2F-BC8D-85466B8CF93D}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0806CA7E-0AA9-4FEC-B8ED-3980274DB897}
 	EndGlobalSection
 EndGlobal
