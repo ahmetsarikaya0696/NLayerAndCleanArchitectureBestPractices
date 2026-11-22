@@ -113,7 +113,7 @@ namespace Application.Features.Categories
 
             if (categories is null || categories?.Count == 0)
             {
-                return ServiceResult<List<CategoryWithProductsDto>>.Fail("", HttpStatusCode.NotFound);
+                return ServiceResult<List<CategoryWithProductsDto>>.Fail("Kategori bulunamadı.", HttpStatusCode.NotFound);
             }
 
             var categoriesWithProducts = categoryRepository.GetCategoriesWithProducts().ToList();
