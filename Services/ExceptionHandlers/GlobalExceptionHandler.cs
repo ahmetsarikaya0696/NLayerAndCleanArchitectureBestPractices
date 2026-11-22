@@ -8,11 +8,11 @@ namespace App.Services.ExceptionHandlers
     {
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
-            var serviceResult = ServiceResult.Fail(exception.Message, HttpStatusCode.InternalServerError);
+            var errorMessages = new[] { exception.Message };
 
-            httpContext.Response.StatusCode = HttpStatusCode.InternalServerError.GetHashCode();
+            httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             httpContext.Response.ContentType = "application/json";
-            await httpContext.Response.WriteAsJsonAsync(serviceResult, cancellationToken);
+            await httpContext.Response.WriteAsJsonAsync(new { ErrorMessages = errorMessages }, cancellationToken);
 
             return true; // true => Başka bir middleware'e uğramayacak.
         }

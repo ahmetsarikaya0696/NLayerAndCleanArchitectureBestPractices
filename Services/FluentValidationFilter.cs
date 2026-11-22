@@ -11,9 +11,7 @@ namespace App.Services
             {
                 var errors = context.ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage).ToList();
 
-                var resultModel = ServiceResult.Fail(errors);
-
-                context.Result = new BadRequestObjectResult(resultModel);
+                context.Result = new BadRequestObjectResult(new { ErrorMessages = errors });
 
                 return;
             }

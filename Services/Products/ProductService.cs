@@ -18,10 +18,7 @@ namespace App.Services.Products
 
             var productsAsDto = mapper.Map<List<ProductDto>>(products);
 
-            return new ServiceResult<List<ProductDto>>()
-            {
-                Data = productsAsDto
-            };
+            return ServiceResult<List<ProductDto>>.Success(productsAsDto);
         }
 
         public async Task<ServiceResult<List<ProductDto>>> GetAllWithCategoryAsync()
@@ -55,7 +52,7 @@ namespace App.Services.Products
 
             var productAsDto = mapper.Map<ProductDto>(product);
 
-            return ServiceResult<ProductDto>.Success(productAsDto)!;
+            return ServiceResult<ProductDto?>.Success(productAsDto);
         }
 
         public async Task<ServiceResult<CreateProductResponse>> CreateAsync(CreateProductRequest createProductRequest)

@@ -1,58 +1,38 @@
-# Project Overview
+# NLayer and Clean Architecture Best Practices
 
-This project is a .NET 8 application using C# 12.0. It follows a clean architecture and n-layered architecture approach to ensure separation of concerns and maintainability.
+Two independent ASP.NET Core samples target **.NET 10 (C# 14)**:
 
-# Clean Architecture Project
+- **Clean Architecture:** `API` → `Application` → `Domain`, with `Persistence`, `Caching`, and `Bus` supporting the API.
+- **N-Layer Architecture:** `App.API` → `App.Services` → `App.Repositories`.
 
-This project follows the Clean Architecture principles to ensure separation of concerns and maintainability.
+## Getting started
 
-## Folder Structure
+Install the .NET 10 SDK. `global.json` allows compatible .NET 10 SDK feature bands.
 
-### API
-Contains the API controllers and related configurations.
+```bash
+dotnet restore NLayerAndCleanArchitectureBestPractices.sln
+dotnet build NLayerAndCleanArchitectureBestPractices.sln --configuration Release
+dotnet test NLayerAndCleanArchitectureBestPractices.sln --configuration Release
+dotnet run --project API/API.csproj
+# or
+dotnet run --project App.API/App.API.csproj
+```
 
-### Application
-Contains the application logic, including features, commands, and queries.
+Configure SQL Server connections for each API; the Clean Architecture sample also uses RabbitMQ.
 
-### Domain
-Contains the domain entities and interfaces.
+## Service result pattern
 
-### Infrastructure
-Contains the implementation of the domain interfaces, including data access and external services.
+Both architectures expose `ServiceResult<T>` and `ServiceResult`. The factories `Success`, `SuccessAsCreated`, and `Fail` return either a nested sealed `Succeeded` or `Failed` record. Only a success contains typed data; only a failure contains errors.
 
-### Services
-Contains the service layer, including business logic and mapping profiles.
+Each application's `CustomBaseController` translates the result to an HTTP response through pattern matching. Existing HTTP payloads with `data` and `errorMessages` properties are retained for compatibility.
 
-## Key Features
+## Migration notes
 
-- **CategoriesController**: Manages category-related operations.
-- **CategoryProfile**: AutoMapper profile for category-related mappings.
-- **ServiceResult**: Standardized service result pattern for handling responses.
+- All nine production projects and the tests target `net10.0`.
+- EF Core SQL Server, Design and Tools were aligned to `10.0.14`; existing EF migrations were preserved.
+- Removed the mismatched `MassTransit.AspNetCore` 7.x package; `MassTransit.RabbitMQ` 8.x already supplies the `AddMassTransit` integration.
+- AutoMapper and Swashbuckle are kept on their existing major versions to avoid unrelated breaking API upgrades.
+- `FluentValidation.AspNetCore` has been patched to `11.3.1`, but is a legacy integration. Plan its removal in a separate change and move to explicit validation.
+- Review EF Core 10 breaking changes and generate/review migrations against your own SQL Server before deploying. No database migrations were generated as part of the SDK upgrade.
 
-# N-Layered Architecture Project
-
-This project follows the N-Layered Architecture principles to ensure separation of concerns and maintainability.
-
-## Folder Structure
-
-### API
-Contains the API controllers, related configurations, and middleware.
-
-### Services
-Contains the service layer, including business logic, mapping profiles, and service interfaces.
-
-### Repositories
-Contains the implementation of the domain interfaces, including data access, external services, and repositories.
-
-## Key Features
-
-- **CategoriesController**: Manages category-related operations.
-- **CategoryProfile**: AutoMapper profile for category-related mappings.
-- **ServiceResult**: Standardized service result pattern for handling responses.
-
-## Technologies Used
-
-- .NET 8
-- C# 12.0
-- AutoMapper
-- ASP.NET Core
+GitHub Actions builds and runs regression tests on .NET 10.
