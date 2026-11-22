@@ -1,100 +1,80 @@
-﻿using System.Net;
-using System.Text.Json.Serialization;
+using System.Net;
 
-namespace App.Services
+namespace App.Services;
+
+/// <summary>A service operation returns exactly one success or failure case.</summary>
+public abstract record ServiceResult<T>
 {
-    public class ServiceResult<T>
+    private ServiceResult() { }
+
+    public sealed record Succeeded(
+        T Data,
+        HttpStatusCode StatusCode = HttpStatusCode.OK,
+        string? UrlAsCreated = null) : ServiceResult<T>;
+
+    public sealed record Failed(
+        IReadOnlyList<string> ErrorMessages,
+        HttpStatusCode StatusCode = HttpStatusCode.BadRequest) : ServiceResult<T>;
+
+    public static ServiceResult<T> Success(T data, HttpStatusCode statusCode = HttpStatusCode.OK)
+        => new Succeeded(data, statusCode);
+
+    public static ServiceResult<T> SuccessAsCreated(T data, string url)
     {
-        public T? Data { get; set; }
-        public List<string>? ErrorMessages { get; set; }
-
-        [JsonIgnore]
-        public bool IsSuccess => ErrorMessages == null || ErrorMessages.Count == 0;
-
-        [JsonIgnore]
-        public bool IsFail => !IsSuccess;
-
-        [JsonIgnore]
-        public HttpStatusCode StatusCode { get; set; }
-
-        [JsonIgnore]
-        public string? UrlAsCreated { get; set; }
-
-        public static ServiceResult<T> Success(T data, HttpStatusCode statusCode = HttpStatusCode.OK)
-        {
-            return new ServiceResult<T>
-            {
-                Data = data,
-                StatusCode = statusCode
-            };
-        }
-
-        public static ServiceResult<T> SuccessAsCreated(T data, string url)
-        {
-            return new ServiceResult<T>
-            {
-                Data = data,
-                StatusCode = HttpStatusCode.Created,
-                UrlAsCreated = url
-            };
-        }
-
-        public static ServiceResult<T> Fail(List<string> errorMessages, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
-        {
-            return new ServiceResult<T>
-            {
-                ErrorMessages = errorMessages,
-                StatusCode = statusCode
-            };
-        }
-
-        public static ServiceResult<T> Fail(string errorMessage, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
-        {
-            return new ServiceResult<T>
-            {
-                ErrorMessages = [errorMessage],
-                StatusCode = statusCode
-            };
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(url);
+        return new Succeeded(data, HttpStatusCode.Created, url);
     }
 
-    public class ServiceResult
+    public static ServiceResult<T> Fail(
+        List<string> errorMessages,
+        HttpStatusCode statusCode = HttpStatusCode.BadRequest)
     {
-        public List<string>? ErrorMessages { get; set; }
+        ArgumentNullException.ThrowIfNull(errorMessages);
+        if (errorMessages.Count == 0)
+            throw new ArgumentException("At least one error message is required.", nameof(errorMessages));
 
-        [JsonIgnore]
-        public bool IsSuccess => ErrorMessages == null || ErrorMessages.Count == 0;
+        return new Failed(errorMessages.ToArray(), statusCode);
+    }
 
-        [JsonIgnore]
-        public bool IsFail => !IsSuccess;
+    public static ServiceResult<T> Fail(
+        string errorMessage,
+        HttpStatusCode statusCode = HttpStatusCode.BadRequest)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(errorMessage);
+        return new Failed([errorMessage], statusCode);
+    }
+}
 
-        [JsonIgnore]
-        public HttpStatusCode StatusCode { get; set; }
+public abstract record ServiceResult
+{
+    private ServiceResult() { }
 
-        public static ServiceResult Success(HttpStatusCode statusCode = HttpStatusCode.OK)
-        {
-            return new ServiceResult
-            {
-                StatusCode = statusCode
-            };
-        }
+    public sealed record Succeeded(
+        HttpStatusCode StatusCode = HttpStatusCode.OK) : ServiceResult;
 
-        public static ServiceResult Fail(List<string> errorMessages, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
-        {
-            return new ServiceResult
-            {
-                ErrorMessages = errorMessages,
-                StatusCode = statusCode
-            };
-        }
+    public sealed record Failed(
+        IReadOnlyList<string> ErrorMessages,
+        HttpStatusCode StatusCode = HttpStatusCode.BadRequest) : ServiceResult;
 
-        public static ServiceResult Fail(string errorMessage, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
-        {
-            return new ServiceResult
-            {
-                ErrorMessages = [errorMessage],
-                StatusCode = statusCode
-            };
-        }
+    public static ServiceResult Success(HttpStatusCode statusCode = HttpStatusCode.OK)
+        => new Succeeded(statusCode);
+
+    public static ServiceResult Fail(
+        List<string> errorMessages,
+        HttpStatusCode statusCode = HttpStatusCode.BadRequest)
+    {
+        ArgumentNullException.ThrowIfNull(errorMessages);
+        if (errorMessages.Count == 0)
+            throw new ArgumentException("At least one error message is required.", nameof(errorMessages));
+
+        return new Failed(errorMessages.ToArray(), statusCode);
+    }
+
+    public static ServiceResult Fail(
+        string errorMessage,
+        HttpStatusCode statusCode = HttpStatusCode.BadRequest)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(errorMessage);
+        return new Failed([errorMessage], statusCode);
     }
 }

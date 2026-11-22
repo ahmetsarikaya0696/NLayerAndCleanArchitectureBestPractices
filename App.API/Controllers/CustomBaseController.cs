@@ -1,38 +1,65 @@
-﻿using App.Services;
+using App.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
-namespace App.API.Controllers
-{
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CustomBaseController : ControllerBase
-    {
-        [NonAction]
-        public IActionResult CreateActionResult<T>(ServiceResult<T> result)
-        {
-            return result.StatusCode switch
-            {
-                HttpStatusCode.NoContent => NoContent(),
-                HttpStatusCode.Created => Created(result.UrlAsCreated, result),
-                _ => new ObjectResult(result)
-                {
-                    StatusCode = result.StatusCode.GetHashCode(),
-                },
-            };
-        }
+namespace App.API.Controllers;
 
-        [NonAction]
-        public IActionResult CreateActionResult(ServiceResult result)
+[Route("api/[controller]")]
+[ApiController]
+public class CustomBaseController : ControllerBase
+{
+    [NonAction]
+    public IActionResult CreateActionResult<T>(ServiceResult<T> result)
+    {
+        return result switch
         {
-            return result.StatusCode switch
-            {
-                HttpStatusCode.NoContent => NoContent(),
-                _ => new ObjectResult(result)
+            ServiceResult<T>.Succeeded { StatusCode: HttpStatusCode.NoContent } => NoContent(),
+
+            ServiceResult<T>.Succeeded { StatusCode: HttpStatusCode.Created } created =>
+                Created(created.UrlAsCreated, new
                 {
-                    StatusCode = result.StatusCode.GetHashCode(),
-                },
-            };
-        }
+                    Data = created.Data,
+                    ErrorMessages = (IReadOnlyList<string>?)null
+                }),
+
+            ServiceResult<T>.Succeeded success =>
+                StatusCode((int)success.StatusCode, new
+                {
+                    Data = success.Data,
+                    ErrorMessages = (IReadOnlyList<string>?)null
+                }),
+
+            ServiceResult<T>.Failed failure =>
+                StatusCode((int)failure.StatusCode, new
+                {
+                    Data = default(T),
+                    ErrorMessages = failure.ErrorMessages
+                }),
+
+            _ => StatusCode(500)
+        };
+    }
+
+    [NonAction]
+    public IActionResult CreateActionResult(ServiceResult result)
+    {
+        return result switch
+        {
+            ServiceResult.Succeeded { StatusCode: HttpStatusCode.NoContent } => NoContent(),
+
+            ServiceResult.Succeeded success =>
+                StatusCode((int)success.StatusCode, new
+                {
+                    ErrorMessages = (IReadOnlyList<string>?)null
+                }),
+
+            ServiceResult.Failed failure =>
+                StatusCode((int)failure.StatusCode, new
+                {
+                    ErrorMessages = failure.ErrorMessages
+                }),
+
+            _ => StatusCode(500)
+        };
     }
 }
